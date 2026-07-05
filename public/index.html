@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Strategy Generator · Pic PR Insight</title>
+<link rel="icon" href="/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#0e1b33; --navy-2:#16264a; --sky:#96d5ec; --sky-deep:#4aa8cc;
+    --paper:#f7f5f0; --ink:#1c2536; --ink-soft:#5a6478; --line:#e3e0d8;
+    --flag:#c0392b; --ok:#2e7d52;
+    --serif:"Fraunces",serif; --sans:"Inter",sans-serif; --mono:"IBM Plex Mono",monospace;
+    --shadow:0 14px 40px -18px rgba(14,27,51,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
+
+  /* Gate */
+  #gate{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--navy)}
+  .gate-card{max-width:380px;width:100%;text-align:center}
+  .gate-card img{height:58px;width:auto;margin:0 auto 26px;display:block}
+  .gate-card h2{color:#fff;font-family:var(--serif);font-weight:600;font-size:27px;margin:0 0 8px}
+  .gate-card p{color:var(--sky);font-size:14px;margin:0 0 18px}
+  .gate-card input{width:100%;text-align:center;padding:12px 14px;border-radius:10px;border:1px solid rgba(150,213,236,.35);background:rgba(255,255,255,.06);color:#fff;font-size:15px;outline:none;margin-bottom:12px}
+  .gate-card button{width:100%;padding:12px 14px;border-radius:10px;border:0;background:var(--sky);color:var(--navy);font-weight:700;font-size:15px;cursor:pointer}
+  .gate-err{color:#ffb4a2;font-size:13px;min-height:18px;margin-top:12px}
+
+  /* Masthead */
+  .masthead{background:linear-gradient(135deg,var(--navy),var(--navy-2));border-radius:18px;padding:38px 36px;margin-bottom:30px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .masthead::after{content:"";position:absolute;right:-70px;top:-70px;width:260px;height:260px;background:radial-gradient(circle,rgba(150,213,236,.35),transparent 70%)}
+  .masthead img{height:44px;width:auto;display:block;margin-bottom:18px;align-self:flex-start}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--sky);margin:0 0 10px}
+  .masthead h1{font-family:var(--serif);font-weight:600;font-size:clamp(32px,4.6vw,50px);line-height:1.02;letter-spacing:-.01em;color:#fff;margin:0}
+  .masthead p.tag{color:#c9d6ea;margin:14px 0 0;max-width:66ch;font-size:16.5px}
+
+  /* Panels */
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 30px;margin-bottom:26px;box-shadow:var(--shadow)}
+  .panel h2{font-family:var(--serif);font-weight:600;font-size:24px;margin:0 0 4px;color:var(--navy)}
+  .panel .sub{color:var(--ink-soft);font-size:14px;margin:0 0 20px}
+  .steplab{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--sky-deep);margin:0 0 6px}
+  label.f{display:block;font-weight:600;font-size:13.5px;margin:16px 0 6px;color:var(--navy)}
+  .hint{font-size:12.5px;color:var(--ink-soft);margin:5px 0 0}
+  input[type=text],textarea,select{width:100%;font-family:inherit;font-size:15px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fcfbf8;color:var(--ink);outline:none}
+  textarea{resize:vertical;min-height:64px}
+  input:focus,textarea:focus{border-color:var(--sky-deep)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .btn{border:0;border-radius:10px;padding:12px 20px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff}
+  .btn.sky{background:var(--sky);color:var(--navy)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--navy);font-weight:600}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:20px}
+
+  /* Figures table */
+  .figs{width:100%;border-collapse:collapse;font-size:14px;margin-top:16px}
+  .figs th{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+  .figs td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  .figs td[contenteditable]{background:#fcfbf8;border-radius:6px;outline:none;min-width:80px}
+  .figs td[contenteditable]:focus{background:#fff;box-shadow:0 0 0 2px var(--sky)}
+  .figs .del{color:var(--flag);cursor:pointer;font-weight:700;background:none;border:0;font-size:15px}
+  .prov{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);margin-top:12px}
+  .drop{border:2px dashed var(--line);border-radius:12px;padding:26px;text-align:center;color:var(--ink-soft);font-size:14px;cursor:pointer;background:#fcfbf8;margin-top:8px}
+  .drop.on{border-color:var(--sky-deep);background:#f0f8fc}
+  .thumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .thumbs img{height:64px;border-radius:8px;border:1px solid var(--line)}
+
+  /* Status + doc */
+  #status{font-family:var(--mono);font-size:13px;color:var(--sky-deep);margin:6px 0 20px;min-height:20px}
+  #status .done{color:var(--ok)}
+  .err{background:#fdf2f0;border:1px solid #eecfc9;color:#7c2d21;padding:14px 18px;border-radius:12px;font-size:14px;margin-top:18px}
+
+  /* The generated document - slide-flavoured sections */
+  #doc{display:none}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 22px}
+  .page{border-radius:18px;overflow:hidden;margin-bottom:26px;box-shadow:var(--shadow);background:#fff;border:1px solid var(--line)}
+  .page .inner{padding:44px 48px}
+  @media(max-width:700px){.page .inner{padding:30px 24px}}
+  .page.navy{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;border:0}
+  .page.sky{background:var(--sky);color:var(--navy);border:0}
+  .page h2.slide{font-family:var(--serif);font-weight:600;font-size:32px;margin:0 0 6px;letter-spacing:-.01em}
+  .page .rule{width:64px;height:3px;background:var(--sky);margin:14px 0 24px;border-radius:2px}
+  .page.sky .rule{background:var(--navy)}
+  .page .k{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.75;margin:0 0 8px}
+  .cardrow{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}
+  @media(max-width:760px){.cardrow{grid-template-columns:1fr}}
+  .cardrow.three{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:900px){.cardrow.three{grid-template-columns:1fr}}
+  .card{border:1.5px solid var(--sky);border-radius:12px;padding:20px 22px;background:rgba(255,255,255,.02)}
+  .page.plain .card{background:#fcfbf8}
+  .card.dotted{border-style:dashed}
+  .card h4{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px}
+  .card h5{font-family:var(--serif);font-size:19px;font-weight:600;margin:0 0 8px}
+  .card ul{margin:0;padding-left:18px}
+  .card li{margin:0 0 8px}
+  .obj{font-weight:800;text-transform:uppercase;font-size:clamp(17px,2.4vw,24px);line-height:1.35;margin:14px 0}
+  .obj u{text-decoration-color:var(--sky);text-decoration-thickness:3px;text-underline-offset:5px}
+  .strip{border:1.5px dashed var(--sky);border-radius:10px;padding:14px 18px;text-align:center;font-size:14.5px;margin-top:22px}
+  .flagged{color:var(--flag);font-weight:600}
+  .provline{font-family:var(--mono);font-size:11.5px;opacity:.7;margin-top:22px}
+  #doc [contenteditable]{outline:none}
+  #doc.editing .inner{outline:1px dashed var(--sky-deep);outline-offset:8px}
+
+  .lib .item{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid var(--line);font-size:14.5px}
+
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;font-size:14px;padding:12px 20px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:40}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media print{
+    body{background:#fff}
+    .wrap{max-width:none;padding:0}
+    .masthead,.panel,.toolbar,#status,#gate,#toast{display:none !important}
+    #doc{display:block !important}
+    .page{box-shadow:none;border-radius:0;margin:0 0 4px;page-break-after:always;border:0}
+    .page.navy{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .page.sky{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-card">
+    <img src="/picpr-navy.png" alt="Pic PR" style="filter:invert(1) brightness(1.6)" />
+    <h2>Strategy Generator</h2>
+    <p>Enter the team password to continue.</p>
+    <input type="password" id="pw" placeholder="Password" autocomplete="current-password" />
+    <button id="unlock">Unlock</button>
+    <div class="gate-err" id="gate-err"></div>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+
+  <header class="masthead">
+    <img src="/picpr-navy.png" alt="Pic PR" style="filter:invert(1) brightness(1.6)" />
+    <p class="eyebrow">Pic PR Insight</p>
+    <h1>Strategy Generator</h1>
+    <p class="tag">Builds a full Pic PR strategy document in the house framework - brief and objectives, audience, regional segmentation, media map, two-pronged approach, message hierarchy, content pillars and campaign starters. Figures only ever come from data you have confirmed.</p>
+  </header>
+
+  <section class="panel">
+    <p class="steplab">Step 1 of 3</p>
+    <h2>The brief</h2>
+    <p class="sub">A few minutes here shapes everything. Paste real client language where you have it - the vision block in particular should be their words, not a summary.</p>
+    <div class="grid2">
+      <div>
+        <label class="f" for="client">Client</label>
+        <input type="text" id="client" placeholder="e.g. Cinnamon Care Collection" />
+      </div>
+      <div>
+        <label class="f" for="sector">Sector / market</label>
+        <input type="text" id="sector" placeholder="e.g. Luxury care homes across the South of England" />
+      </div>
+    </div>
+    <label class="f" for="brief">The client's brief to us</label>
+    <textarea id="brief" rows="3" placeholder="e.g. Offer creative PR for all homes within the portfolio, support positive sector positioning and support increased pipeline of enquiries / overall positive occupancy impact."></textarea>
+    <label class="f" for="vision">Vision and values (paste their own words)</label>
+    <textarea id="vision" rows="5" placeholder="Paste the client's vision, commitment or values statement here."></textarea>
+    <div class="grid2">
+      <div>
+        <label class="f" for="regions">Primary regions</label>
+        <input type="text" id="regions" placeholder="e.g. West Midlands, Worcestershire &amp; Warwickshire" />
+      </div>
+      <div>
+        <label class="f" for="subareas">Sub areas</label>
+        <input type="text" id="subareas" placeholder="e.g. Birmingham, Bromsgrove, Redditch, Solihull, Warwick, Worcester &amp; Wyre Forest" />
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="f" for="b2c">B2C audience notes</label>
+        <textarea id="b2c" rows="3" placeholder="Who are the consumer audiences? e.g. future residents plus the daughters and family members who research care on their behalf."></textarea>
+      </div>
+      <div>
+        <label class="f" for="b2b">B2B audience notes</label>
+        <textarea id="b2b" rows="3" placeholder="Who matters on the trade side? e.g. care trade press for sector positioning, plus talent retention and recruitment."></textarea>
+      </div>
+    </div>
+    <label class="f" for="extra">Anything else the strategist should know <span style="font-weight:400;color:var(--ink-soft)">(optional)</span></label>
+    <textarea id="extra" rows="2" placeholder="e.g. Moving away from a former lux-first positioning. A partnership with Louis Alexander gives the brand a national fundraising story."></textarea>
+  </section>
+
+  <section class="panel">
+    <p class="steplab">Step 2 of 3</p>
+    <h2>Regional data</h2>
+    <p class="sub">Drop in screenshots from the Experian Power BI dashboard (shopper segments, personas, response channels). The reader extracts the figures, then YOU confirm or correct each one - only confirmed figures can ever appear in the document. Skip this step entirely if there is no data yet.</p>
+    <div class="drop" id="drop">Click to choose screenshots, or drag them here<br /><span style="font-size:12.5px">PNG or JPG, up to 6 at a time</span></div>
+    <input type="file" id="file" accept="image/png,image/jpeg,image/webp" multiple style="display:none" />
+    <div class="thumbs" id="thumbs"></div>
+    <div class="btnrow">
+      <button class="btn ghost" id="readBtn" disabled>Read the screenshots</button>
+      <button class="btn ghost" id="addFigBtn">Add a figure by hand</button>
+    </div>
+    <div id="figwrap" style="display:none">
+      <table class="figs" id="figs">
+        <thead><tr><th style="width:44%">Statement</th><th>Figure</th><th>Region / scope</th><th>Source</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="grid2" style="margin-top:16px">
+        <div>
+          <label class="f" for="confirmedBy">Confirmed by (initials)</label>
+          <input type="text" id="confirmedBy" placeholder="e.g. LH" style="max-width:140px" />
+        </div>
+      </div>
+      <p class="prov" id="provNote">Every figure above will carry this confirmation stamp in the document.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <p class="steplab">Step 3 of 3</p>
+    <h2>Generate the strategy</h2>
+    <p class="sub">Built section by section: one senior pass for the strategic core, quicker passes for the supporting sections, then an automatic figures audit. Everything is editable once it lands - click any text in the document to change it.</p>
+    <div class="btnrow">
+      <button class="btn" id="genBtn">Generate strategy document</button>
+      <button class="btn ghost" id="libBtn">Past documents</button>
+    </div>
+    <div id="library" class="lib" style="margin-top:16px"></div>
+    <div id="status"></div>
+    <div id="errbox"></div>
+  </section>
+
+  <div id="doc">
+    <div class="toolbar">
+      <button class="btn sky" id="editBtn">Edit document</button>
+      <button class="btn ghost" id="copyBtn">Copy for Docs</button>
+      <button class="btn ghost" id="printBtn">Print / save as PDF</button>
+      <button class="btn ghost" id="auditBtn">Re-run figures audit</button>
+      <button class="btn" id="saveBtn">Save to library</button>
+    </div>
+    <div id="pages"></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var FN = "/.netlify/functions/strategy";
+  var KEY_STORE = "picpr-k";
+  var APP_PASSWORD = "";
+
+  var esc = function(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); };
+  var $ = function(id){ return document.getElementById(id); };
+
+  function flash(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(flash._t); flash._t=setTimeout(function(){t.classList.remove("show");},2600); }
+  function setStatus(msg, done){ $("status").innerHTML = msg ? (done?'<span class="done">'+esc(msg)+"</span>":esc(msg)+" &hellip;") : ""; }
+  function showError(msg){ $("errbox").innerHTML = '<div class="err">'+esc(msg)+"</div>"; }
+  function clearError(){ $("errbox").innerHTML=""; }
+
+  /* ---------- Gate (suite standard: server ping, ?k= handoff, sessionStorage) ---------- */
+  async function validatePassword(pw){
+    try{
+      var res = await fetch(FN,{method:"POST",headers:{"content-type":"application/json","x-password":pw},body:JSON.stringify({ping:true})});
+      return res.ok;
+    }catch(e){ return false; }
+  }
+  function openApp(){ $("gate").style.display="none"; $("app").style.display="block"; $("client").focus(); }
+  async function unlock(){
+    var v=$("pw").value.trim();
+    if(!v){ $("gate-err").textContent="Please enter the password."; return; }
+    $("gate-err").textContent="Checking\u2026";
+    if(!(await validatePassword(v))){ $("gate-err").textContent="That password was not accepted. Please try again."; $("pw").value=""; return; }
+    APP_PASSWORD=v; try{sessionStorage.setItem(KEY_STORE,v);}catch(e){}
+    $("gate-err").textContent=""; openApp();
+  }
+  $("unlock").addEventListener("click",unlock);
+  $("pw").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); });
+  (async function auto(){
+    var c="";
+    try{
+      var p=new URLSearchParams(location.search);
+      if(p.get("k")){ c=p.get("k"); p.delete("k"); history.replaceState(null,"",location.pathname+(p.toString()?"?"+p.toString():"")+location.hash); }
+    }catch(e){}
+    if(!c){ try{ c=sessionStorage.getItem(KEY_STORE)||""; }catch(e){} }
+    if(!c) return;
+    if(await validatePassword(c)){ APP_PASSWORD=c; try{sessionStorage.setItem(KEY_STORE,c);}catch(e){} openApp(); }
+  })();
+  function lockOut(){ APP_PASSWORD=""; try{sessionStorage.removeItem(KEY_STORE);}catch(e){} $("app").style.display="none"; $("gate").style.display="flex"; $("gate-err").textContent="That password was not accepted. Please try again."; }
+
+  /* ---------- Streaming AI helper ---------- */
+  async function ask(tier, system, prompt, images, onDelta){
+    var body={tier:tier, system:system, prompt:prompt, password:APP_PASSWORD};
+    if(images && images.length) body.images=images;
+    var res=await fetch(FN,{method:"POST",headers:{"content-type":"application/json","x-password":APP_PASSWORD},body:JSON.stringify(body)});
+    if(res.status===401) throw new Error("UNAUTHORISED");
+    if(!res.ok){ var d=await res.json().catch(function(){return{};}); throw new Error(d.error||("Request failed ("+res.status+")")); }
+    var reader=res.body.getReader(), dec=new TextDecoder(), out="";
+    while(true){
+      var r=await reader.read();
+      if(r.done) break;
+      out+=dec.decode(r.value,{stream:true});
+      if(onDelta) onDelta(out);
+    }
+    return out;
+  }
+  function extractJSON(text){
+    var m=text.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error("No JSON found in the response");
+    return JSON.parse(m[0]);
+  }
+  async function askJSON(tier, system, prompt, images){
+    var t=await ask(tier, system, prompt, images);
+    try{ return extractJSON(t); }
+    catch(e){
+      var t2=await ask(tier, system, prompt+"\n\nIMPORTANT: your previous answer could not be parsed. Respond with ONLY the JSON object - no preamble, no markdown fences.", images);
+      return extractJSON(t2);
+    }
+  }
+
+  /* ---------- House style shared across prompts ---------- */
+  var HOUSE = 'Write in British English. Use hyphens with spaces ( - ) never en or em dashes. No Oxford commas. Avoid AI cliches (never use words or phrases like "delve", "landscape", "in today\'s fast-paced world", "unlock", "elevate", "seamless"). Avoid neat rule-of-three sentence constructions. Confident agency voice - plain, specific, editorial. ';
+  var NOSTATS = 'HARD RULE: never invent a statistic, population figure, percentage or count. The only numbers permitted are those in the CONFIRMED FIGURES list if one is provided. If no figure is confirmed for a point, make the point without a number. ';
+
+  /* ---------- Step 2: screenshots and figures ---------- */
+  var shots=[]; // {media_type, data, name}
+  var drop=$("drop"), fileEl=$("file");
+  drop.addEventListener("click",function(){ fileEl.click(); });
+  drop.addEventListener("dragover",function(e){ e.preventDefault(); drop.classList.add("on"); });
+  drop.addEventListener("dragleave",function(){ drop.classList.remove("on"); });
+  drop.addEventListener("drop",function(e){ e.preventDefault(); drop.classList.remove("on"); takeFiles(e.dataTransfer.files); });
+  fileEl.addEventListener("change",function(){ takeFiles(fileEl.files); fileEl.value=""; });
+  function takeFiles(list){
+    Array.prototype.slice.call(list).slice(0, 6-shots.length).forEach(function(f){
+      if(!/^image\//.test(f.type)) return;
+      var rd=new FileReader();
+      rd.onload=function(){
+        shots.push({media_type:f.type, data:String(rd.result).split(",")[1], name:f.name});
+        renderThumbs();
+      };
+      rd.readAsDataURL(f);
+    });
+  }
+  function renderThumbs(){
+    $("thumbs").innerHTML=shots.map(function(s,i){ return '<img src="data:'+s.media_type+';base64,'+s.data+'" title="'+esc(s.name)+'" />'; }).join("");
+    $("readBtn").disabled=!shots.length;
+  }
+
+  var figures=[]; // {statement, value, region, source}
+  function renderFigs(){
+    $("figwrap").style.display=figures.length?"block":"none";
+    var tb=$("figs").querySelector("tbody");
+    tb.innerHTML=figures.map(function(f,i){
+      return "<tr>"+
+        '<td contenteditable data-i="'+i+'" data-k="statement">'+esc(f.statement)+"</td>"+
+        '<td contenteditable data-i="'+i+'" data-k="value">'+esc(f.value)+"</td>"+
+        '<td contenteditable data-i="'+i+'" data-k="region">'+esc(f.region)+"</td>"+
+        '<td contenteditable data-i="'+i+'" data-k="source">'+esc(f.source)+"</td>"+
+        '<td><button class="del" data-del="'+i+'" title="Remove">&times;</button></td>'+
+      "</tr>";
+    }).join("");
+    tb.querySelectorAll("[contenteditable]").forEach(function(td){
+      td.addEventListener("input",function(){ figures[+td.getAttribute("data-i")][td.getAttribute("data-k")]=td.textContent.trim(); });
+    });
+    tb.querySelectorAll("[data-del]").forEach(function(b){
+      b.addEventListener("click",function(){ figures.splice(+b.getAttribute("data-del"),1); renderFigs(); });
+    });
+  }
+  $("addFigBtn").addEventListener("click",function(){
+    figures.push({statement:"", value:"", region:$("regions").value.trim(), source:"Added by hand"});
+    renderFigs();
+    var rows=$("figs").querySelectorAll("tbody tr");
+    if(rows.length) rows[rows.length-1].querySelector("[contenteditable]").focus();
+  });
+  $("readBtn").addEventListener("click",async function(){
+    clearError(); $("readBtn").disabled=true; $("readBtn").textContent="Reading\u2026";
+    try{
+      var sys='You extract figures from marketing data dashboard screenshots (Experian ConsumerView / Power BI). You NEVER guess: only extract what is clearly legible. '+HOUSE;
+      var prompt='Extract every clearly legible figure from these screenshots as JSON: {"figures":[{"statement":"plain-English description of what the figure measures","value":"the figure exactly as shown","region":"geographic scope if visible, else empty","source":"e.g. Experian shopper segments screenshot"}]}. Include persona names with their population counts, percentages, totals and channel rankings. If part of a figure is unclear, leave it out entirely rather than guessing. Respond with ONLY the JSON.';
+      var out=await askJSON("reader", sys, prompt, shots.map(function(s){return {media_type:s.media_type, data:s.data};}));
+      (out.figures||[]).forEach(function(f){ figures.push({statement:f.statement||"", value:f.value||"", region:f.region||$("regions").value.trim(), source:f.source||"Screenshot"}); });
+      renderFigs();
+      flash((out.figures||[]).length+" figures extracted - check and correct them before generating");
+    }catch(e){
+      if(e.message==="UNAUTHORISED"){ lockOut(); return; }
+      showError("Could not read the screenshots: "+e.message);
+    }
+    $("readBtn").disabled=false; $("readBtn").textContent="Read the screenshots";
+  });
+
+  function confirmedFiguresBlock(){
+    var live=figures.filter(function(f){ return f.statement && f.value; });
+    if(!live.length) return "";
+    return "CONFIRMED FIGURES (the only numbers you may use, quoted exactly):\n"+live.map(function(f){ return "- "+f.statement+": "+f.value+(f.region?(" ["+f.region+"]"):"")+" (source: "+f.source+")"; }).join("\n");
+  }
+
+  /* ---------- Step 3: generation pipeline ---------- */
+  var docData=null;
+
+  function inputs(){
+    return {
+      client:$("client").value.trim(), sector:$("sector").value.trim(), brief:$("brief").value.trim(),
+      vision:$("vision").value.trim(), regions:$("regions").value.trim(), subareas:$("subareas").value.trim(),
+      b2c:$("b2c").value.trim(), b2b:$("b2b").value.trim(), extra:$("extra").value.trim(),
+      confirmedBy:$("confirmedBy")?$("confirmedBy").value.trim():""
+    };
+  }
+
+  $("genBtn").addEventListener("click", async function(){
+    var inp=inputs();
+    clearError();
+    if(!inp.client){ $("client").focus(); showError("The strategist needs at least a client name."); return; }
+    if(!inp.brief){ $("brief").focus(); showError("Paste the client's brief - the whole document hangs off it."); return; }
+    $("genBtn").disabled=true;
+    var figsBlock=confirmedFiguresBlock();
+    var ctx="CLIENT: "+inp.client+"\nSECTOR: "+(inp.sector||"not given")+"\nBRIEF: "+inp.brief+
+      (inp.vision?("\nVISION AND VALUES (client's own words):\n"+inp.vision):"")+
+      (inp.regions?("\nPRIMARY REGIONS: "+inp.regions):"")+(inp.subareas?("\nSUB AREAS: "+inp.subareas):"")+
+      (inp.b2c?("\nB2C AUDIENCE NOTES: "+inp.b2c):"")+(inp.b2b?("\nB2B AUDIENCE NOTES: "+inp.b2b):"")+
+      (inp.extra?("\nADDITIONAL CONTEXT: "+inp.extra):"")+
+      (figsBlock?("\n\n"+figsBlock):"\n\nNO CONFIRMED FIGURES: use no numbers at all.");
+
+    try{
+      /* 1 - the strategic core: the one senior (Opus) call */
+      setStatus("The strategist is shaping the core - objectives, audiences, approach, pillars and campaign starters");
+      var core=await askJSON("strategist",
+        'You are Pic PR\'s creative director building a PR strategy in the agency\'s house framework. '+HOUSE+NOSTATS+
+        'Depth over padding. Every pillar and campaign must feel bespoke to this client, not generic to the sector.',
+        ctx+'\n\nProduce the strategic core as JSON with EXACTLY this shape:\n{\n"objectives":["2 to 4 objective lines, each a short imperative like BUILD REPUTATION AS CARE CENTRED, with the key phrase first"],\n"audience":{"b2c":{"label":"e.g. CARE SEEKERS - B2C (REGIONAL & NATIONAL)","groups":[{"name":"","desc":""}],"actions":["what we want them to do"],"motivation":["emotive drivers"]},"b2b":{"label":"","groups":[{"name":"","desc":""}],"actions":[""],"motivation":[""]}},\n"approach":{"b2c":{"title":"Audience focus: ...","body":"2 short paragraphs on always-on tactics plus creative amplification","goals":["restate relevant objectives"],"note":"any crossover note"},"b2b":{"title":"","body":"","goals":[""]},"strip":"one sentence on emotional messaging across all activity"},\n"hierarchy":{"regional":{"heading":"REGIONAL - B2C","lead":"e.g. Home centric","body":""},"national":{"heading":"NATIONAL - B2C & B2B","lead":"e.g. Brand first","body":""},"caution":"one flowing sentence on intentional content"},\n"pillarsB2C":[{"title":"","core":"Core message: one sentence","focus":["3 or 4 focus areas"],"rationale":"why this pillar works for this audience","starters":["2 or 3 concrete content examples with specifics"]}],\n"pillarsB2B":[same shape],\n"campaigns":[{"title":"CREATIVE CAMPAIGN NAME","summary":"2 or 3 sentences on the idea","media":"target media","audience":"target audience","messaging":"which brand message it lands","assets":"images / video / design needs","cost":"any expected third-party costs, or None expected"}]\n}\nExactly 3 pillars per audience and exactly 3 campaigns. Respond with ONLY the JSON.');
+
+      /* 2 - supporting sections on the quicker model */
+      setStatus("Writing the vision connection");
+      var visionSec=inp.vision?await askJSON("writer",
+        'You write one section of a Pic PR strategy document. '+HOUSE+NOSTATS,
+        ctx+'\n\nWrite the CONNECT TO YOUR VISION section as JSON: {"body":["2 short paragraphs explaining that all storytelling must connect to the client\'s vision and why - reference their actual vision phrase in quotes and any repositioning noted in the context"],"pull":"the single vision phrase to display large, in their words"}. Respond with ONLY the JSON.'):null;
+
+      var segSec=null;
+      if(figsBlock){
+        setStatus("Writing the regional segmentation from your confirmed figures");
+        segSec=await askJSON("writer",
+          'You write one section of a Pic PR strategy document. '+HOUSE+NOSTATS+'Every number must be copied exactly from the confirmed list - no rounding, no derivation.',
+          ctx+'\n\nWrite the REGIONAL SEGMENTATION headlines as JSON: {"headlines":["3 to 5 bullet insights built ONLY from the confirmed figures, each naming its figure exactly as confirmed"],"note":"one sentence on how this data should steer targeting or channel choices, without numbers"}. Respond with ONLY the JSON.');
+      }
+
+      setStatus("Writing PR in the bigger picture");
+      var bigSec=await askJSON("writer",
+        'You write one section of a Pic PR strategy document. '+HOUSE+NOSTATS,
+        ctx+'\n\nWrite the PR IN THE BIGGER PICTURE section as JSON: {"paras":["4 or 5 single-sentence paragraphs on PR\'s role in the funnel for this client - awareness to consideration, frequency and credibility, mental availability, celebrating success to cement reputation"]}. Respond with ONLY the JSON.');
+
+      setStatus("Mapping the media landscape");
+      var mediaSec=await askJSON("writer",
+        'You suggest realistic UK media targets for a PR strategy. '+HOUSE+'Only name real, currently publishing outlets you are confident exist. Quality over quantity.',
+        ctx+'\n\nSuggest a media map as JSON: {"regional":["8 to 12 named outlets serving the stated regions"],"national":["8 to 12 national news outlets and programmes suited to this story"],"trade":["6 to 10 trade titles for this sector"],"note":"one sentence noting this is a snapshot, not a full media list"}. Respond with ONLY the JSON.');
+
+      docData={inp:inp, figures:figures.filter(function(f){return f.statement&&f.value;}), core:core, vision:visionSec, seg:segSec, big:bigSec, media:mediaSec, generated:new Date()};
+      renderDoc(docData);
+      setStatus("Document built - running the figures audit");
+
+      /* 3 - the cheap audit pass */
+      await runAudit();
+      setStatus("Done. Click any text to edit, then save to the library.", true);
+      $("doc").scrollIntoView({behavior:"smooth"});
+    }catch(e){
+      if(e.message==="UNAUTHORISED"){ lockOut(); return; }
+      showError("Generation stopped: "+e.message);
+      setStatus("");
+    }
+    $("genBtn").disabled=false;
+  });
+
+  async function runAudit(){
+    if(!docData) return;
+    try{
+      var text=$("pages").innerText.slice(0,12000);
+      var figs=docData.figures.map(function(f){return f.statement+": "+f.value;}).join("\n")||"(none - the document should contain no statistics at all)";
+      var out=await askJSON("auditor",
+        'You are a fact-checking auditor. You compare a document against a list of confirmed figures.',
+        "CONFIRMED FIGURES:\n"+figs+"\n\nDOCUMENT TEXT:\n"+text+'\n\nList every number, percentage, population or count in the document that is NOT in the confirmed list (ignore dates, page numbers and counts of pillars or campaigns). JSON only: {"issues":[{"quote":"the offending phrase exactly as written","why":"not in confirmed figures"}]}. If clean: {"issues":[]}.');
+      var issues=(out.issues||[]);
+      var box=$("auditBox");
+      if(box) box.remove();
+      var div=document.createElement("div");
+      div.id="auditBox";
+      if(!issues.length){
+        div.innerHTML='<div class="panel" style="border-color:#bcd9c8"><h2 style="font-size:19px">Figures audit - clean</h2><p class="sub" style="margin:0">Every number in the document matches a confirmed figure.</p></div>';
+      }else{
+        div.innerHTML='<div class="panel" style="border-color:#eecfc9"><h2 style="font-size:19px;color:var(--flag)">Figures audit - '+issues.length+' to check</h2><p class="sub">These numbers are not in the confirmed list. Edit or remove them before this goes anywhere near a client.</p>'+issues.map(function(i){return '<p style="margin:8px 0"><span class="flagged">'+esc(i.quote)+'</span> - '+esc(i.why)+"</p>";}).join("")+"</div>";
+        issues.forEach(function(i){ highlight(i.quote); });
+      }
+      $("doc").insertBefore(div, $("pages"));
+    }catch(e){ /* the audit is a safety net, never a blocker */ }
+  }
+  function highlight(quote){
+    if(!quote) return;
+    var walker=document.createTreeWalker($("pages"),NodeFilter.SHOW_TEXT), node;
+    while((node=walker.nextNode())){
+      var idx=node.textContent.indexOf(quote);
+      if(idx>-1){
+        var span=document.createElement("span"); span.className="flagged";
+        var range=document.createRange(); range.setStart(node,idx); range.setEnd(node,idx+quote.length);
+        try{ range.surroundContents(span); }catch(e){}
+        return;
+      }
+    }
+  }
+  $("auditBtn") && document.addEventListener("click",function(e){ if(e.target && e.target.id==="auditBtn") runAudit(); });
+
+  /* ---------- Rendering ---------- */
+  function ul(arr){ return "<ul>"+(arr||[]).map(function(x){return "<li>"+esc(x)+"</li>";}).join("")+"</ul>"; }
+  function paras(arr){ return (arr||[]).map(function(p){return "<p>"+esc(p)+"</p>";}).join(""); }
+
+  function renderDoc(d){
+    var c=d.core, i=d.inp;
+    var today=d.generated.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+    var html="";
+
+    /* Cover */
+    html+='<div class="page navy"><div class="inner" style="padding-top:70px;padding-bottom:70px">'+
+      '<p class="k">Pic PR x '+esc(i.client)+"</p>"+
+      '<h2 class="slide" style="font-size:clamp(36px,5vw,56px)">Your PR strategy</h2><div class="rule"></div>'+
+      '<p style="font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.85">'+esc(today)+"</p>"+
+      '<p style="opacity:.85;max-width:60ch;margin-top:26px">Explore your brief &nbsp;/&nbsp; PR strategy &nbsp;/&nbsp; PR plan &nbsp;/&nbsp; Creative thought starters</p>'+
+      "</div></div>";
+
+    /* Objectives */
+    html+='<div class="page navy"><div class="inner"><h2 class="slide">Our objectives</h2><div class="rule"></div>'+
+      '<p style="opacity:.9"><strong>Your brief to us:</strong> '+esc(i.brief)+"</p>"+
+      '<p class="k" style="margin-top:22px">In summary our PR will</p>'+
+      (c.objectives||[]).map(function(o){
+        var parts=String(o).split(/ (.+)/);
+        return '<p class="obj"><u>'+esc(parts[0]+(parts[1]?"":""))+(parts[1]?"</u> "+esc(parts[1]):"</u>")+"</p>";
+      }).join("")+"</div></div>";
+
+    /* Vision */
+    if(d.vision){
+      html+='<div class="page sky"><div class="inner"><h2 class="slide">Connect to your vision</h2><div class="rule"></div>'+
+        '<p style="font-family:var(--serif);font-size:26px;font-weight:600;margin:6px 0 18px">\u2018'+esc(d.vision.pull||"")+"\u2019</p>"+
+        paras(d.vision.body)+"</div></div>";
+    }
+
+    /* Audience */
+    html+='<div class="page plain"><div class="inner"><h2 class="slide" style="color:var(--navy)">Audience</h2><div class="rule"></div><div class="cardrow">'+
+      audCard(c.audience&&c.audience.b2c)+audCard(c.audience&&c.audience.b2b)+"</div></div></div>";
+
+    /* Segmentation */
+    if(d.seg){
+      html+='<div class="page plain"><div class="inner"><h2 class="slide" style="color:var(--navy)">Regional segmentation</h2><div class="rule"></div>'+
+        '<p class="k" style="color:var(--sky-deep)">Primary regions: '+esc(i.regions||"")+"</p>"+
+        (i.subareas?'<p style="color:var(--ink-soft);font-size:14px;margin-top:2px">Sub areas: '+esc(i.subareas)+"</p>":"")+
+        '<p style="font-weight:700;margin-top:20px">Headlines:</p>'+ul(d.seg.headlines)+
+        "<p>"+esc(d.seg.note||"")+"</p>"+
+        '<p class="provline" style="color:var(--ink-soft)">Figures confirmed'+(i.confirmedBy?(" by "+esc(i.confirmedBy)):"")+" on "+esc(today)+" from "+esc(uniqueSources(d.figures))+".</p>"+
+        "</div></div>";
+    }
+
+    /* Bigger picture */
+    html+='<div class="page navy"><div class="inner"><h2 class="slide">PR in the bigger picture</h2><div class="rule"></div>'+paras(d.big&&d.big.paras)+"</div></div>";
+
+    /* Media map */
+    html+='<div class="page plain"><div class="inner"><h2 class="slide" style="color:var(--navy)">Media map</h2><div class="rule"></div><div class="cardrow three">'+
+      mediaCard("Regional",d.media&&d.media.regional)+mediaCard("National",d.media&&d.media.national)+mediaCard("Care trade"===undefined?"Trade":"Trade",d.media&&d.media.trade)+
+      '</div><p class="hint" style="margin-top:16px">'+esc((d.media&&d.media.note)||"A snapshot of publications, by no means a full media list.")+"</p></div></div>";
+
+    /* Motivation */
+    html+='<div class="page plain"><div class="inner"><h2 class="slide" style="color:var(--navy)">Audience motivation</h2><div class="rule"></div><div class="cardrow">'+
+      motCard(c.audience&&c.audience.b2c)+motCard(c.audience&&c.audience.b2b)+"</div></div></div>";
+
+    /* Approach */
+    html+='<div class="page plain"><div class="inner"><h2 class="slide" style="color:var(--navy)">Two-pronged PR approach using creative storytelling</h2><div class="rule"></div><div class="cardrow">'+
+      appCard(c.approach&&c.approach.b2c)+appCard(c.approach&&c.approach.b2b)+
+      '</div><div class="strip" style="border-color:var(--sky-deep);color:var(--navy)">'+esc((c.approach&&c.approach.strip)||"")+"</div></div></div>";
+
+    /* Hierarchy */
+    html+='<div class="page navy"><div class="inner"><h2 class="slide">Message hierarchy</h2><div class="rule"></div><div class="cardrow">'+
+      hierCard(c.hierarchy&&c.hierarchy.regional)+hierCard(c.hierarchy&&c.hierarchy.national)+
+      '</div><div class="strip">'+esc((c.hierarchy&&c.hierarchy.caution)||"")+"</div></div></div>";
+
+    /* Pillars */
+    html+=pillarPage("Content pillars - "+b2cName(c),"sky",c.pillarsB2C,false);
+    html+=pillarPage("Content thought starters - "+b2cName(c),"plain",c.pillarsB2C,true);
+    html+=pillarPage("Content pillars - "+b2bName(c),"sky",c.pillarsB2B,false);
+    html+=pillarPage("Content thought starters - "+b2bName(c),"plain",c.pillarsB2B,true);
+
+    /* Summary - assembled from what we already have, no extra AI cost */
+    html+='<div class="page plain"><div class="inner"><h2 class="slide" style="color:var(--navy)">PR summary</h2><div class="rule"></div><div class="cardrow">'+
+      '<div class="card"><h4 style="color:var(--sky-deep)">Always on</h4><p>News releases and thought leadership to drive exposure and reach the audience at regional and national level, amplified with creative campaigns.</p></div>'+
+      '<div class="card dotted"><h4 style="color:var(--sky-deep)">Creative campaigns</h4><p>Creative-led activity that surfaces the brand to the audience in more distinctive ways to drive action.</p></div>'+
+      '<div class="card"><h4 style="color:var(--sky-deep)">Press office - ongoing</h4>'+ul(["Media relations","News releases","Interview generation","Feature opportunities","Commentary and newsjacking"])+"</div>"+
+      '<div class="card dotted"><h4 style="color:var(--sky-deep)">Campaign development - periodical</h4>'+ul(["Creative angle generation","Campaign approach","Targeted outcomes","Campaign delivery"])+"</div>"+
+      '</div><p class="hint" style="margin-top:16px">The above is supported by day-to-day contact, bi-weekly calls and monthly reporting. All third-party costs will be chargeable and additional costs may be required activity dependent - costs will be declared upfront prior to campaign or activity sign off.</p></div></div>';
+
+    /* Campaign starters */
+    (c.campaigns||[]).forEach(function(cp){
+      html+='<div class="page navy"><div class="inner"><p class="k">Campaign starter</p><h2 class="slide">'+esc(cp.title)+'</h2><div class="rule"></div>'+
+        "<p>"+esc(cp.summary)+"</p>"+
+        '<div class="cardrow" style="margin-top:24px">'+
+        '<div class="card"><h4>Target media</h4><p style="margin:0">'+esc(cp.media)+'</p></div>'+
+        '<div class="card"><h4>Target audience</h4><p style="margin:0">'+esc(cp.audience)+'</p></div>'+
+        '<div class="card"><h4>Messaging focus</h4><p style="margin:0">'+esc(cp.messaging)+'</p></div>'+
+        '<div class="card"><h4>Assets and cost</h4><p style="margin:0">'+esc(cp.assets)+" &middot; "+esc(cp.cost)+"</p></div>"+
+        "</div></div></div>";
+    });
+
+    /* Thank you */
+    html+='<div class="page navy"><div class="inner" style="padding-top:70px;padding-bottom:70px"><h2 class="slide" style="font-size:clamp(36px,5vw,54px)">Thank you.</h2><div class="rule"></div>'+
+      '<p style="font-size:12.5px;opacity:.7;max-width:80ch">The concepts and ideas submitted to you by Pic PR are of a confidential nature. No use shall be made of the said concepts and ideas, including communication to a third party, without Pic PR\u2019s prior consent.</p></div></div>';
+
+    $("pages").innerHTML=html;
+    $("doc").style.display="block";
+    var old=$("auditBox"); if(old) old.remove();
+  }
+
+  function b2cName(c){ try{ return c.audience.b2c.label.split(" - ")[0].toLowerCase().replace(/^./,function(m){return m.toUpperCase();}); }catch(e){ return "Consumer"; } }
+  function b2bName(c){ try{ return c.audience.b2b.label.split(" - ")[0].toLowerCase().replace(/^./,function(m){return m.toUpperCase();}); }catch(e){ return "Trade"; } }
+  function uniqueSources(figs){
+    var s=[]; (figs||[]).forEach(function(f){ if(f.source&&s.indexOf(f.source)<0) s.push(f.source); });
+    return s.join("; ")||"confirmed data";
+  }
+  function audCard(a){
+    if(!a) return "";
+    return '<div><div class="card"><h4 style="color:var(--sky-deep)">'+esc(a.label)+"</h4>"+
+      (a.groups||[]).map(function(g){return "<p><strong>"+esc(g.name)+":</strong> "+esc(g.desc)+"</p>";}).join("")+
+      '</div><div class="card dotted" style="margin-top:14px"><h4 style="color:var(--sky-deep)">What we want them to do</h4>'+ul(a.actions)+"</div></div>";
+  }
+  function motCard(a){
+    if(!a) return "";
+    return '<div><div class="card"><h4 style="color:var(--sky-deep)">'+esc(a.label)+"</h4>"+
+      (a.groups||[]).map(function(g){return "<p><strong>"+esc(g.name)+":</strong> "+esc(g.desc)+"</p>";}).join("")+
+      '</div><div class="card" style="margin-top:14px;background:var(--navy);color:#fff;border-color:var(--navy)"><h4 style="color:var(--sky)">Motivation</h4>'+ul(a.motivation)+"</div></div>";
+  }
+  function appCard(a){
+    if(!a) return "";
+    return '<div class="card"><h4 style="color:var(--sky-deep)">'+esc(a.title)+"</h4><p>"+esc(a.body)+'</p><p style="font-weight:700;margin-bottom:6px">Goals:</p>'+ul(a.goals)+(a.note?'<p class="hint">'+esc(a.note)+"</p>":"")+"</div>";
+  }
+  function hierCard(h){
+    if(!h) return "";
+    return '<div class="card"><h4>'+esc(h.heading)+"</h4><p><strong>"+esc(h.lead)+":</strong> "+esc(h.body)+"</p></div>";
+  }
+  function pillarPage(title, tone, pillars, starters){
+    var body=(pillars||[]).map(function(p){
+      return '<div class="card"'+(tone==="sky"?' style="border-color:var(--navy)"':"")+'><h5>'+esc(p.title)+"</h5>"+
+        (starters
+          ? '<p style="font-weight:700;margin:0 0 8px">Content examples:</p>'+ul(p.starters)
+          : "<p>"+esc(p.core)+'</p><p style="font-weight:700;margin:14px 0 6px">Focus areas:</p>'+ul(p.focus)+'<p class="hint">'+esc(p.rationale)+"</p>")+
+        "</div>";
+    }).join("");
+    return '<div class="page '+tone+'"><div class="inner"><h2 class="slide"'+(tone==="plain"?' style="color:var(--navy)"':"")+'>'+esc(title)+'</h2><div class="rule"></div><div class="cardrow three">'+body+"</div></div></div>";
+  }
+
+  /* ---------- Toolbar ---------- */
+  var editing=false;
+  $("editBtn").addEventListener("click",function(){
+    editing=!editing;
+    $("pages").querySelectorAll("p,li,h2,h5,h4").forEach(function(el){ el.contentEditable=editing; });
+    $("doc").classList.toggle("editing",editing);
+    $("editBtn").textContent=editing?"Done editing":"Edit document";
+    flash(editing?"Click any text to change it":"Edits kept");
+  });
+  $("copyBtn").addEventListener("click",function(){
+    var range=document.createRange(); range.selectNode($("pages"));
+    var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    try{ document.execCommand("copy"); flash("Copied - paste into Google Docs or Word"); }catch(e){ flash("Copy failed - select and copy by hand"); }
+    sel.removeAllRanges();
+  });
+  $("printBtn").addEventListener("click",function(){ window.print(); });
+
+  /* ---------- Library ---------- */
+  $("saveBtn").addEventListener("click",async function(){
+    if(!docData) return;
+    $("saveBtn").disabled=true; $("saveBtn").textContent="Saving\u2026";
+    try{
+      var res=await fetch(FN,{method:"POST",headers:{"content-type":"application/json","x-password":APP_PASSWORD},
+        body:JSON.stringify({action:"save",client:docData.inp.client,html:$("pages").innerHTML,meta:{confirmedBy:docData.inp.confirmedBy,figures:docData.figures.length,type:"strategy"}})});
+      if(res.status===401){ lockOut(); return; }
+      var d=await res.json();
+      if(!res.ok) throw new Error(d.error||"Save failed");
+      flash("Saved to the library");
+    }catch(e){ showError("Could not save: "+e.message); }
+    $("saveBtn").disabled=false; $("saveBtn").textContent="Save to library";
+  });
+  $("libBtn").addEventListener("click",async function(){
+    var lib=$("library");
+    lib.innerHTML='<p class="hint">Looking up past documents\u2026</p>';
+    try{
+      var res=await fetch(FN,{method:"POST",headers:{"content-type":"application/json","x-password":APP_PASSWORD},body:JSON.stringify({action:"list",client:$("client").value.trim()||undefined})});
+      if(res.status===401){ lockOut(); return; }
+      var d=await res.json();
+      if(!res.ok) throw new Error(d.error||"List failed");
+      var docs=d.docs||[];
+      if(!docs.length){ lib.innerHTML='<p class="hint">Nothing saved yet'+($("client").value.trim()?" for "+esc($("client").value.trim()):"")+".</p>"; return; }
+      lib.innerHTML=docs.map(function(x){
+        var when=new Date(x.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+        return '<div class="item"><span><strong>'+esc(x.client)+"</strong> &nbsp;<span style='color:var(--ink-soft)'>- "+esc(when)+"</span></span><button class='btn ghost' data-open='"+esc(x.id)+"'>Open</button></div>";
+      }).join("");
+      lib.querySelectorAll("[data-open]").forEach(function(b){
+        b.addEventListener("click",async function(){
+          b.textContent="Loading\u2026";
+          try{
+            var r=await fetch(FN,{method:"POST",headers:{"content-type":"application/json","x-password":APP_PASSWORD},body:JSON.stringify({action:"get",id:b.getAttribute("data-open")})});
+            var dd=await r.json();
+            if(!r.ok) throw new Error(dd.error||"Load failed");
+            $("pages").innerHTML=dd.doc.html;
+            docData=docData||{inp:inputs(),figures:[]};
+            $("doc").style.display="block";
+            lib.innerHTML="";
+            $("doc").scrollIntoView({behavior:"smooth"});
+          }catch(e){ b.textContent="Could not load"; }
+        });
+      });
+    }catch(e){ lib.innerHTML='<p class="hint">Library unavailable: '+esc(e.message)+"</p>"; }
+  });
+
+})();
+</script>
+</body>
+</html>

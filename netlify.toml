@@ -1,0 +1,10 @@
+# netlify.toml
+# A short note that tells Netlify how the project is laid out.
+# "publish" is the folder of files the public sees.
+# "functions" is where the back-office code lives.
+
+[build]
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
