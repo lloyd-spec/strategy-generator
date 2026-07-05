@@ -108,6 +108,13 @@
 
   .lib .item{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid var(--line);font-size:14.5px}
 
+  .site-footer{display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap;padding:34px 4px 10px;margin:14px 0 0;border-top:1px solid var(--line)}
+  .footer-brand{display:flex;flex-direction:column;gap:12px;max-width:44ch}
+  .footer-logo{height:42px;width:auto;align-self:flex-start;display:block}
+  .footer-line{font-size:14.5px;color:var(--ink-soft);margin:0}
+  .footer-line b{color:var(--navy)}
+  .gptw-badge{height:104px;width:auto;display:block;flex:none}
+
   #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;font-size:14px;padding:12px 20px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:40}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -126,7 +133,7 @@
 
 <div id="gate">
   <div class="gate-card">
-    <img src="/picpr-navy.png" alt="Pic PR" style="filter:invert(1) brightness(1.6)" />
+    <img src="/picpr-logo.png" alt="Pic PR" style="filter:invert(1)" />
     <h2>Strategy Generator</h2>
     <p>Enter the team password to continue.</p>
     <input type="password" id="pw" placeholder="Password" autocomplete="current-password" />
@@ -138,7 +145,7 @@
 <div class="wrap" id="app" style="display:none">
 
   <header class="masthead">
-    <img src="/picpr-navy.png" alt="Pic PR" style="filter:invert(1) brightness(1.6)" />
+    <img src="/picpr-logo.png" alt="Pic PR" style="filter:invert(1)" />
     <p class="eyebrow">Pic PR Insight</p>
     <h1>Strategy Generator</h1>
     <p class="tag">Builds a full Pic PR strategy document in the house framework - brief and objectives, audience, regional segmentation, media map, two-pronged approach, message hierarchy, content pillars and campaign starters. Figures only ever come from data you have confirmed.</p>
@@ -236,6 +243,14 @@
     <div id="pages"></div>
   </div>
 
+  <footer class="site-footer" id="siteFooter" style="display:none">
+    <div class="footer-brand">
+      <img class="footer-logo" src="/picpr-logo.png" alt="Pic PR" />
+      <p class="footer-line">A recognised workplace. Pic PR is proud to be <b>Great Place To Work&reg;</b> Certified.</p>
+    </div>
+    <img class="gptw-badge" src="/gptw-badge.png" alt="Great Place To Work Certified. United Kingdom. April 2026 to April 2027." />
+  </footer>
+
 </div>
 
 <div id="toast"></div>
@@ -263,7 +278,7 @@
       return res.ok;
     }catch(e){ return false; }
   }
-  function openApp(){ $("gate").style.display="none"; $("app").style.display="block"; $("client").focus(); }
+  function openApp(){ $("gate").style.display="none"; $("app").style.display="block"; $("client").focus(); var f=document.getElementById("siteFooter"); if(f) f.style.display="flex"; }
   async function unlock(){
     var v=$("pw").value.trim();
     if(!v){ $("gate-err").textContent="Please enter the password."; return; }
